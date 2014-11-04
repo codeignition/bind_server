@@ -1,0 +1,12 @@
+$ORIGIN .
+$TTL 86400      ; 1 day
+<%=@rev_domain%>     IN SOA  ns.<%=@domain%>. admin.<%=@domain%>. (
+                                2006081402 ; serial
+                                28800      ; refresh (8 hours)
+                                604800     ; retry (1 week)
+                                604800     ; expire (1 week)
+                                86400      ; minimum (1 day)
+                                )
+                        NS      ns.<%=@domain%>.
+$ORIGIN <%=@rev_domain%>.
+<%= @ipaddress.split(".").reverse[0..1].join(".") %>                 IN    PTR    ns.<%= @domain%>

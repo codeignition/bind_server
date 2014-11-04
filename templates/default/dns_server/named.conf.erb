@@ -1,0 +1,62 @@
+options {
+listen-on port 53 { 127.0.0.1; <%= @ipaddress%>;};
+	directory 	"/var/named";
+	dump-file 	"/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        forwarders      { <%= @ec2_dns_server %>;  };
+	allow-query     { localhost; <%= @subnet%>;};
+	recursion yes;
+
+	dnssec-enable no;
+	dnssec-validation no;
+	dnssec-lookaside auto;
+
+	/* Path to ISC DLV key */
+	bindkeys-file "/etc/named.iscdlv.key";
+
+	managed-keys-directory "/var/named/dynamic";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "." IN {
+       type hint;
+       file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+
+
+key "<%= @key_name%>" {
+algorithm HMAC-MD5;
+secret "<%= @key_value%>";
+};
+
+zone "<%= @domain%>" IN {
+type master;
+file "data/vogogo.zone";
+allow-query     { localhost; <%= @subnet%>;};
+allow-update { localhost;};
+};
+
+zone "<%= @rev_domain%>" IN {
+  type master;
+  file "data/vogogo.rev";
+  allow-query     { localhost; <%= @subnet%>;};
+  allow-update { localhost;};
+  };
+
+<% @regions.each do |region| %>
+zone "<%= region %>" IN {
+type forward;
+  forward only;
+  forwarders { <%= @ec2_dns_server %>; };
+};
+<% end %>
